@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
 
 env:
-  AWS_REGION: us-east-2
+  AWS_REGION: ${{ secrets.AWS_REGION }}
   ECR_USERS_REPOSITORY: fcg-users-api
   ECR_CATALOG_REPOSITORY: fcg-catalog-api
   ECR_PAYMENTS_REPOSITORY: fcg-payments-api
@@ -30,9 +30,9 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ secrets.759410591963 }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
       - name: Login to Amazon ECR
         id: login-ecr
@@ -63,21 +63,15 @@ jobs:
 
       - name: Build users-api image
         run: |
-          docker build \
-            -t ${{ steps.meta.outputs.users_image }} \
-            ./users-api_fase3
+          docker build -t ${{ steps.meta.outputs.users_image }} ./users-api_fase3
 
       - name: Build catalog-api image
         run: |
-          docker build \
-            -t ${{ steps.meta.outputs.catalog_image }} \
-            ./catalog-api_fase3
+          docker build -t ${{ steps.meta.outputs.catalog_image }} ./catalog-api_fase3
 
       - name: Build payments-api image
         run: |
-          docker build \
-            -t ${{ steps.meta.outputs.payments_image }} \
-            ./payments-api_fase3
+          docker build -t ${{ steps.meta.outputs.payments_image }} ./payments-api_fase3
 
       - name: Push users-api image
         run: docker push ${{ steps.meta.outputs.users_image }}
@@ -91,6 +85,7 @@ jobs:
   deploy-ec2:
     runs-on: ubuntu-latest
     needs: build-and-push
+    environment: production
 
     steps:
       - name: Checkout
@@ -121,22 +116,24 @@ jobs:
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.EC2_HOST }}
-          username: ec2-user
+          username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           source: "deploy-package/*"
-          target: "/home/ec2-user/app"
+          target: "/home/${{ secrets.EC2_USER }}/app"
 
       - name: Deploy on EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
-          username: ec2-user
+          username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             set -e
-            cd /home/ec2-user/app
+            cd /home/${{ secrets.EC2_USER }}/app
 
-            aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin 759410591963.dkr.ecr.us-east-2.amazonaws.com
+            aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | \
+            docker login --username AWS --password-stdin \
+            ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
 
             docker compose -f docker-compose.yml -f docker-compose.aws.yml --env-file .env pull
             docker compose -f docker-compose.yml -f docker-compose.aws.yml --env-file .env up -d --remove-orphans

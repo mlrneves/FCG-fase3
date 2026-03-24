@@ -18,11 +18,6 @@ jobs:
   build-and-push:
     runs-on: ubuntu-latest
 
-    outputs:
-      users_image: ${{ steps.meta.outputs.users_image }}
-      catalog_image: ${{ steps.meta.outputs.catalog_image }}
-      payments_image: ${{ steps.meta.outputs.payments_image }}
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -57,27 +52,27 @@ jobs:
           REGISTRY="${{ steps.login-ecr.outputs.registry }}"
           TAG="latest"
 
-          echo "users_image=${REGISTRY}/${ECR_USERS_REPOSITORY}:${TAG}" >> $GITHUB_OUTPUT
-          echo "catalog_image=${REGISTRY}/${ECR_CATALOG_REPOSITORY}:${TAG}" >> $GITHUB_OUTPUT
-          echo "payments_image=${REGISTRY}/${ECR_PAYMENTS_REPOSITORY}:${TAG}" >> $GITHUB_OUTPUT
+          echo "USERS_IMAGE=${REGISTRY}/${ECR_USERS_REPOSITORY}:${TAG}" >> $GITHUB_ENV
+          echo "CATALOG_IMAGE=${REGISTRY}/${ECR_CATALOG_REPOSITORY}:${TAG}" >> $GITHUB_ENV
+          echo "PAYMENTS_IMAGE=${REGISTRY}/${ECR_PAYMENTS_REPOSITORY}:${TAG}" >> $GITHUB_ENV
 
       - name: Build users-api image
-        run: docker build -t ${{ steps.meta.outputs.users_image }} ./users-api_fase3
+        run: docker build -t ${{ env.USERS_IMAGE }} ./users-api_fase3
 
       - name: Build catalog-api image
-        run: docker build -t ${{ steps.meta.outputs.catalog_image }} ./catalog-api_fase3
+        run: docker build -t ${{ env.CATALOG_IMAGE }} ./catalog-api_fase3
 
       - name: Build payments-api image
-        run: docker build -t ${{ steps.meta.outputs.payments_image }} ./payments-api_fase3
+        run: docker build -t ${{ env.PAYMENTS_IMAGE }} ./payments-api_fase3
 
       - name: Push users-api image
-        run: docker push ${{ steps.meta.outputs.users_image }}
+        run: docker push ${{ env.USERS_IMAGE }}
 
       - name: Push catalog-api image
-        run: docker push ${{ steps.meta.outputs.catalog_image }}
+        run: docker push ${{ env.CATALOG_IMAGE }}
 
       - name: Push payments-api image
-        run: docker push ${{ steps.meta.outputs.payments_image }}
+        run: docker push ${{ env.PAYMENTS_IMAGE }}
 
   deploy-ec2:
     runs-on: ubuntu-latest
@@ -106,9 +101,9 @@ jobs:
           ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }}
           DD_API_KEY=${{ secrets.DD_API_KEY }}
           DD_SITE=${{ secrets.DD_SITE }}
-          USERS_API_IMAGE=${{ needs.build-and-push.outputs.users_image }}
-          CATALOG_API_IMAGE=${{ needs.build-and-push.outputs.catalog_image }}
-          PAYMENTS_API_IMAGE=${{ needs.build-and-push.outputs.payments_image }}
+          USERS_API_IMAGE=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/fcg-users-api:latest
+          CATALOG_API_IMAGE=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/fcg-catalog-api:latest
+          PAYMENTS_API_IMAGE=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/fcg-payments-api:latest
           EOF
 
       - name: Copy files to EC2

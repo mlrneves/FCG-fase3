@@ -156,19 +156,21 @@ if (!app.Environment.IsEnvironment("Testing"))
         db.SaveChanges();
     }
 }
-app.UseCors("AllowGateway");
 
-app.UsePathBase("/users");
+app.UseCors("AllowGateway");
 
 app.UseSwagger(c =>
 {
     c.PreSerializeFilters.Add((swagger, httpReq) =>
     {
+        var host = httpReq.Headers["x-forwarded-host"].FirstOrDefault() ?? httpReq.Host.Value;
+        var proto = httpReq.Headers["x-forwarded-proto"].FirstOrDefault() ?? httpReq.Scheme;
+
         swagger.Servers = new List<Microsoft.OpenApi.Models.OpenApiServer>
         {
             new()
             {
-                Url = $"{httpReq.Scheme}://{httpReq.Host.Value}{httpReq.PathBase.Value}"
+                Url = $"{proto}://{host}/users"
             }
         };
     });

@@ -1,7 +1,10 @@
+using Amazon;
+using Amazon.SQS;
 using Core.Entity;
 using Core.Repository;
 using Core.Services;
 using FCGApi.Infra;
+using Infrastructure.Configuration;
 using Infrastructure.CrossCutting.Correlation;
 using Infrastructure.Repository;
 using Infrastructure.Services;
@@ -88,9 +91,23 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 }, ServiceLifetime.Scoped);
 
 builder.Services.AddScoped<IUserRepository, UserRepository>();
-builder.Services.AddScoped<IIntegrationEventPublisher, IntegrationEventPublisher>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+
+builder.Services.Configure<AwsSqsOptions>(
+    builder.Configuration.GetSection("Aws:Sqs"));
+
+builder.Services.AddSingleton<IAmazonSQS>(_ =>
+{
+    var regionName = builder.Configuration["Aws:Sqs:Region"];
+
+    if (string.IsNullOrWhiteSpace(regionName))
+        throw new InvalidOperationException("Aws:Sqs:Region não foi configurado.");
+
+    return new AmazonSQSClient(RegionEndpoint.GetBySystemName(regionName));
+});
+
+builder.Services.AddScoped<IIntegrationEventPublisher, SqsIntegrationEventPublisher>();
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICorrelationIdGenerator, CorrelationIdGenerator>();

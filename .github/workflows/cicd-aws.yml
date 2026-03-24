@@ -32,7 +32,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          aws-region: ${{ env.AWS_REGION }}
 
       - name: Login to Amazon ECR
         id: login-ecr
@@ -55,7 +55,7 @@ jobs:
         shell: bash
         run: |
           REGISTRY="${{ steps.login-ecr.outputs.registry }}"
-          TAG="${GITHUB_SHA}"
+          TAG="latest"
 
           echo "users_image=${REGISTRY}/${ECR_USERS_REPOSITORY}:${TAG}" >> $GITHUB_OUTPUT
           echo "catalog_image=${REGISTRY}/${ECR_CATALOG_REPOSITORY}:${TAG}" >> $GITHUB_OUTPUT
@@ -117,8 +117,9 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          source: "deploy-package/"
+          source: "deploy-package/docker-compose.yml,deploy-package/docker-compose.aws.yml,deploy-package/.env"
           target: "/home/${{ secrets.EC2_USER }}/app"
+          strip_components: 1
 
       - name: Deploy on EC2
         uses: appleboy/ssh-action@v1.0.3
@@ -129,13 +130,11 @@ jobs:
           script: |
             set -e
             mkdir -p /home/${{ secrets.EC2_USER }}/app
-            cd /home/${{ secrets.EC2_USER }}/app/deploy-package
+            cd /home/${{ secrets.EC2_USER }}/app
 
-            aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | \
-            docker login --username AWS --password-stdin \
-            ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+            aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
 
-            docker compose -f docker-compose.yml -f docker-compose.aws.yml --env-file .env pull
-            docker compose -f docker-compose.yml -f docker-compose.aws.yml --env-file .env up -d --remove-orphans
+            docker compose -f docker-compose.aws.yml --env-file .env pull
+            docker compose -f docker-compose.aws.yml --env-file .env up -d --remove-orphans
 
             docker ps

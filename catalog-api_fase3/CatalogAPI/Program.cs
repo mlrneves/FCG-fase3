@@ -113,6 +113,8 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICorrelationIdGenerator, CorrelationIdGenerator>();
 #endregion
 
+builder.Services.AddHealthChecks();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -138,4 +140,8 @@ app.UseAuthorization();
 
 app.MapControllers();
 
+app.MapHealthChecks("/health");
+
 app.Run();
+
+public partial class Program { }

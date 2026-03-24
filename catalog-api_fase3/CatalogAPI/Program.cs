@@ -115,6 +115,17 @@ builder.Services.AddScoped<ICorrelationIdGenerator, CorrelationIdGenerator>();
 
 builder.Services.AddHealthChecks();
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowGateway", policy =>
+    {
+        policy
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowAnyOrigin();
+    });
+});
+
 var app = builder.Build();
 
 app.UseCors("AllowGateway");
@@ -130,7 +141,7 @@ app.UseSwagger(c =>
         {
             new()
             {
-                Url = $"{proto}://{host}/users"
+                Url = $"{proto}://{host}/games"
             }
         };
     });

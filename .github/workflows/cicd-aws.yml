@@ -21,6 +21,20 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore users-api solution
+        run: dotnet restore ./users-api_fase3/FCGUsersAPI.sln
+
+      - name: Build users-api solution
+        run: dotnet build ./users-api_fase3/FCGUsersAPI.sln --configuration Release --no-restore
+
+      - name: Test users-api solution
+        run: dotnet test ./users-api_fase3/FCGUsersAPI.sln --configuration Release --no-build --verbosity normal
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4

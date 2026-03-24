@@ -1,260 +1,105 @@
+# Payments API - FCG Fase 3
 
-# PaymentsAPI
+## 📌 Descrição
 
-## Visão Geral
-O **PaymentsAPI** é o microsserviço responsável por **processar pagamentos de compras de jogos** dentro da arquitetura do sistema FCG.
+A **Payments API** é um microserviço responsável pelo processamento e gerenciamento de pagamentos no sistema.
 
-Ele recebe eventos de compra publicados pelo `CatalogAPI`, simula o processamento do pagamento e publica o resultado para que outros microsserviços reajam ao resultado.
-
-Arquitetura baseada em **eventos assíncronos usando RabbitMQ e MassTransit**.
+Este serviço faz parte da arquitetura distribuída desenvolvida para o Desafio da Fase 3, utilizando práticas modernas de microsserviços, observabilidade e integração com serviços AWS.
 
 ---
 
-# Responsabilidade do Microsserviço
+## 🚀 Responsabilidades
 
-O PaymentsAPI é responsável por:
-
-- Consumir `OrderPlacedEvent`
-- Processar o pagamento (simulado)
-- Persistir o resultado no banco do serviço
-- Publicar `PaymentProcessedEvent`
-- Permitir consulta de pagamentos via API
-
-Ele **não autentica usuários**, **não gerencia catálogo** e **não envia notificações**.
-
-Essas responsabilidades pertencem respectivamente a:
-
-- UsersAPI
-- CatalogAPI
-- NotificationsAPI
+- Recebimento e processamento de pagamentos
+- Registro de transações
+- Atualização de status de pagamento
+- Integração com outros microserviços do ecossistema
+- Publicação e consumo de eventos em arquitetura distribuída
 
 ---
 
-# Eventos
+## 🔐 Segurança
 
-## Evento Consumido
-
-### OrderPlacedEvent
-
-Publicado pelo **CatalogAPI** quando um usuário tenta comprar um jogo.
-
-Campos principais:
-
-- PurchaseId
-- UserId
-- GameId
-- Price
-
-Objetivo:
-iniciar o processamento do pagamento.
+- Proteção de endpoints sensíveis
+- Integração com autenticação e controle de acesso no ambiente distribuído
 
 ---
 
-## Evento Publicado
+## 📡 Observabilidade
 
-### PaymentProcessedEvent
+O serviço possui integração com:
 
-Publicado pelo **PaymentsAPI** após processar o pagamento.
-
-Campos principais:
-
-- PurchaseId
-- UserId
-- GameId
-- Price
-- Status (Approved / Rejected)
-- ProcessedAt
-
-Consumido por:
-
-- CatalogAPI
-- NotificationsAPI
+- **Serilog** para logs estruturados
+- **Datadog** para monitoramento, logs e traces
+- Middleware de **Correlation ID** para rastreabilidade ponta a ponta
 
 ---
 
-# Arquitetura do Projeto
+## 📊 Auditoria
 
-O projeto segue separação em camadas.
-
-## Core
-
-Contém:
-
-- Entidades do domínio
-- Interfaces de repositórios
-- Interfaces de serviços
-- Contratos de eventos
-
-Objetivo:
-manter a regra de negócio desacoplada de infraestrutura.
+O serviço registra ações relevantes por meio de **Audit Log**, permitindo rastreabilidade e apoio à auditoria operacional.
 
 ---
 
-## Infrastructure
+## ☁️ Integração com AWS
 
-Contém:
-
-- DbContext
-- Configurações do EF Core
-- Repositórios
-- Consumers do MassTransit
-- Implementação dos serviços
-
-Objetivo:
-isolar detalhes técnicos da aplicação.
+- Preparado para execução em ambiente cloud (AWS)
+- Integração com componentes distribuídos da solução
+- Suporte a comunicação assíncrona quando aplicável
 
 ---
 
-## PaymentsAPI (Web)
+## ❤️ Health Check
 
-Responsável por:
+Endpoint disponível para verificação de saúde do serviço:
 
-- Configuração do MassTransit
-- Configuração de autenticação JWT
-- Swagger
-- Controllers
-- Inicialização da aplicação
+GET /health
 
 ---
 
-# Tecnologias Utilizadas
+## 🐳 Containerização
 
-- .NET 8
-- ASP.NET Core
-- Entity Framework Core
-- SQL Server
-- RabbitMQ
-- MassTransit
-- JWT Authentication
-- Swagger
-- Docker
-- Kubernetes
+O serviço é containerizado utilizando Docker, permitindo execução consistente em qualquer ambiente.
 
 ---
 
-# Banco de Dados
+## 🧪 Testes
 
-Banco utilizado:
+O projeto possui testes automatizados básicos para validação de funcionamento:
 
-FCGPayments
+- Teste de Health Check
+- Teste de inicialização da aplicação (smoke test)
 
-Tabela principal:
+Executar localmente:
 
-Payments
-
-Migrations são aplicadas automaticamente no startup usando:
-
-Database.Migrate()
-
-Isso permite execução direta com Docker e Kubernetes.
+dotnet test
 
 ---
 
-# Variáveis de Ambiente
+## 🏗️ Arquitetura
 
-## Banco
+O projeto segue uma estrutura em camadas:
 
-ConnectionStrings__ConnectionString
-
-Exemplo:
-
-Server=sqlserver;Database=FCGPayments;User Id=sa;Password=Your_password123;TrustServerCertificate=True
-
----
-
-## RabbitMQ
-
-RabbitMq__Host  
-RabbitMq__Username  
-RabbitMq__Password
+- **PaymentsAPI** → camada de apresentação (controllers)
+- **Core** → regras de negócio
+- **Infrastructure** → acesso a dados e integrações externas
+- **Tests** → testes automatizados
 
 ---
 
-## JWT
+## 📌 Observação
 
-Jwt__Issuer  
-Jwt__Key
-
-O token é gerado pelo **UsersAPI**, mas validado aqui.
+A configuração de infraestrutura, deploy, API Gateway e orquestração é realizada externamente a este repositório.
 
 ---
 
-## Filas
+## 👩‍💻 Projeto acadêmico
 
-Queues__OrderPlaced
+Este projeto foi desenvolvido como parte do desafio da pós-graduação, com foco em:
 
-Define o nome da fila que consome `OrderPlacedEvent`.
-
----
-
-# Execução Local
-
-```bash
-dotnet restore
-dotnet build
-dotnet run
-```
-
-Swagger:
-
-```
-http://localhost:{porta}/swagger
-```
-
----
-
-# Docker
-
-Build:
-
-```
-docker build -t fcg-payments-api .
-```
-
-Run:
-
-```
-docker run -p 5003:8080 fcg-payments-api
-```
-
----
-
-# Kubernetes
-
-Os manifestos ficam na pasta:
-
-```
-/k8s
-```
-
-Arquivos:
-
-- payments-api-configmap.yaml
-- payments-api-secret.yaml
-- payments-api-deployment.yaml
-- payments-api-service.yaml
-
-Eles garantem:
-
-- gerenciamento de pods com Deployment
-- configurações em ConfigMap
-- segredos em Secret
-- exposição do serviço via Service
-
----
-
-# Fluxo de Compra
-
-1. CatalogAPI publica `OrderPlacedEvent`
-2. PaymentsAPI consome o evento
-3. Pagamento é processado
-4. PaymentsAPI publica `PaymentProcessedEvent`
-5. CatalogAPI e NotificationsAPI reagem ao resultado
-
----
-
-# Observações Importantes
-
-- Contratos de eventos devem ser **idênticos entre serviços**
-- Configurações sensíveis devem ficar em **Secrets**
-- Configurações não sensíveis devem ficar em **ConfigMaps**
+- Microsserviços
+- Cloud (AWS)
+- Observabilidade
+- CI/CD
+- Arquitetura distribuída
+- Auditoria e rastreabilidade

@@ -91,6 +91,8 @@ builder.Services.AddScoped<IPaymentService, PaymentService>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICorrelationIdGenerator, CorrelationIdGenerator>();
 
+builder.Services.AddHealthChecks();
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -115,4 +117,8 @@ using (var scope = app.Services.CreateScope())
     db.Database.Migrate();
 }
 
+app.MapHealthChecks("/health");
+
 app.Run();
+
+public partial class Program { }

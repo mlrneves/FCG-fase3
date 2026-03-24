@@ -101,6 +101,10 @@ jobs:
           ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }}
           DD_API_KEY=${{ secrets.DD_API_KEY }}
           DD_SITE=${{ secrets.DD_SITE }}
+          INTERNAL_API_KEY=${{ secrets.INTERNAL_API_KEY }}
+          NOTIFICATIONS_QUEUE_URL=${{ secrets.NOTIFICATIONS_QUEUE_URL }}
+          PURCHASE_CREATED_QUEUE_URL=${{ secrets.PURCHASE_CREATED_QUEUE_URL }}
+          AWS_REGION=${{ secrets.AWS_REGION }}
           USERS_API_IMAGE=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/fcg-users-api:latest
           CATALOG_API_IMAGE=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/fcg-catalog-api:latest
           PAYMENTS_API_IMAGE=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/fcg-payments-api:latest

@@ -115,23 +115,20 @@ builder.Services.AddHealthChecks();
 
 var app = builder.Build();
 
-using (var scope = app.Services.CreateScope())
+if (!app.Environment.IsEnvironment("Testing"))
 {
-    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    db.Database.Migrate();
-}
-
-using (var scope = app.Services.CreateScope())
-{
+    using var scope = app.Services.CreateScope();
     var services = scope.ServiceProvider;
 
-    var context = services.GetRequiredService<ApplicationDbContext>();
+    var db = services.GetRequiredService<ApplicationDbContext>();
     var config = services.GetRequiredService<IConfiguration>();
+
+    db.Database.Migrate();
 
     var adminSection = config.GetSection("AdminUser");
     var adminEmail = adminSection["Email"] ?? "admin@fcg.com";
 
-    if (!context.Users.Any(u => u.Email == adminEmail))
+    if (!db.Users.Any(u => u.Email == adminEmail))
     {
         var admin = new User
         {
@@ -142,8 +139,8 @@ using (var scope = app.Services.CreateScope())
             CreatedAt = DateTime.UtcNow
         };
 
-        context.Users.Add(admin);
-        context.SaveChanges();
+        db.Users.Add(admin);
+        db.SaveChanges();
     }
 }
 

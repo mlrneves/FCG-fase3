@@ -160,24 +160,21 @@ app.UseCors("AllowGateway");
 
 app.UsePathBase("/users");
 
-if (app.Environment.IsDevelopment())
+app.UseSwagger(c =>
 {
-    app.UseSwagger(c =>
+    c.PreSerializeFilters.Add((swagger, httpReq) =>
     {
-        c.PreSerializeFilters.Add((swagger, httpReq) =>
-        {
-            swagger.Servers = new List<Microsoft.OpenApi.Models.OpenApiServer>
+        swagger.Servers = new List<Microsoft.OpenApi.Models.OpenApiServer>
         {
             new()
             {
                 Url = $"{httpReq.Scheme}://{httpReq.Host.Value}{httpReq.PathBase.Value}"
             }
         };
-        });
     });
+});
 
-    app.UseSwaggerUI();
-}
+app.UseSwaggerUI();
 
 app.UseCorrelationMiddleware();
 app.UseLogMiddleware();

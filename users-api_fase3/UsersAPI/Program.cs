@@ -113,6 +113,19 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICorrelationIdGenerator, CorrelationIdGenerator>();
 builder.Services.AddHealthChecks();
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowGateway", policy =>
+    {
+        policy
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowAnyOrigin();
+    });
+});
+
+
+
 var app = builder.Build();
 
 if (!app.Environment.IsEnvironment("Testing"))
@@ -143,6 +156,7 @@ if (!app.Environment.IsEnvironment("Testing"))
         db.SaveChanges();
     }
 }
+app.UseCors("AllowGateway");
 
 app.UsePathBase("/users");
 
@@ -153,9 +167,12 @@ if (app.Environment.IsDevelopment())
         c.PreSerializeFilters.Add((swagger, httpReq) =>
         {
             swagger.Servers = new List<Microsoft.OpenApi.Models.OpenApiServer>
+        {
+            new()
             {
-                new() { Url = $"{httpReq.Scheme}://{httpReq.Host.Value}{httpReq.PathBase.Value}" }
-            };
+                Url = $"{httpReq.Scheme}://{httpReq.Host.Value}{httpReq.PathBase.Value}"
+            }
+        };
         });
     });
 

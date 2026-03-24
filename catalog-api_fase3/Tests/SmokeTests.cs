@@ -1,14 +1,13 @@
 ﻿using System.Net;
 using FluentAssertions;
-using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace Tests;
 
-public class SmokeTests : IClassFixture<WebApplicationFactory<Program>>
+public class SmokeTests : IClassFixture<CustomWebApplicationFactory>
 {
     private readonly HttpClient _client;
 
-    public SmokeTests(WebApplicationFactory<Program> factory)
+    public SmokeTests(CustomWebApplicationFactory factory)
     {
         _client = factory.CreateClient();
     }

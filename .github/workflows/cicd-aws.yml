@@ -45,6 +45,15 @@ jobs:
       - name: Test catalog-api solution
         run: dotnet test ./catalog-api_fase3/FCGCatalogAPI.sln --configuration Release --no-build --verbosity normal
 
+      - name: Restore payments-api solution
+        run: dotnet restore ./payments-api_fase3/FCGPaymentsAPI.sln
+
+      - name: Build payments-api solution
+        run: dotnet build ./payments-api_fase3/FCGPaymentsAPI.sln --configuration Release --no-restore
+
+      - name: Test payments-api solution
+        run: dotnet test ./payments-api_fase3/FCGPaymentsAPI.sln --configuration Release --no-build --verbosity normal
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:

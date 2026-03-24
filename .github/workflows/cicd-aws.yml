@@ -36,6 +36,15 @@ jobs:
       - name: Test users-api solution
         run: dotnet test ./users-api_fase3/FCGUsersAPI.sln --configuration Release --no-build --verbosity normal
 
+      - name: Restore catalog-api solution
+        run: dotnet restore ./catalog-api_fase3/FCGCatalogAPI.sln
+
+      - name: Build catalog-api solution
+        run: dotnet build ./catalog-api_fase3/FCGCatalogAPI.sln --configuration Release --no-restore
+
+      - name: Test catalog-api solution
+        run: dotnet test ./catalog-api_fase3/FCGCatalogAPI.sln --configuration Release --no-build --verbosity normal
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:

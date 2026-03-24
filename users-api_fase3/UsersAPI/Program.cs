@@ -147,9 +147,21 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
+app.UsePathBase("/users");
+
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
+    app.UseSwagger(c =>
+    {
+        c.PreSerializeFilters.Add((swagger, httpReq) =>
+        {
+            swagger.Servers = new List<Microsoft.OpenApi.Models.OpenApiServer>
+            {
+                new() { Url = $"{httpReq.Scheme}://{httpReq.Host.Value}{httpReq.PathBase.Value}" }
+            };
+        });
+    });
+
     app.UseSwaggerUI();
 }
 

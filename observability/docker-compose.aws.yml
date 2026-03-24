@@ -56,6 +56,9 @@ services:
       ConnectionStrings__ConnectionString: Server=sqlserver;Database=FCGUsers;User Id=sa;Password=${SQL_SA_PASSWORD};TrustServerCertificate=True
       Jwt__Issuer: ${JWT_ISSUER}
       Jwt__Key: ${JWT_KEY}
+      InternalApi__ApiKey: ${INTERNAL_API_KEY}
+      Aws__Sqs__Region: ${AWS_REGION}
+      Aws__Sqs__NotificationsQueueUrl: ${NOTIFICATIONS_QUEUE_URL}
       AdminUser__Name: ${ADMIN_NAME}
       AdminUser__Email: ${ADMIN_EMAIL}
       AdminUser__Password: ${ADMIN_PASSWORD}
@@ -93,6 +96,9 @@ services:
       ConnectionStrings__ConnectionString: Server=sqlserver;Database=FCGCatalog;User Id=sa;Password=${SQL_SA_PASSWORD};TrustServerCertificate=True
       Jwt__Issuer: ${JWT_ISSUER}
       Jwt__Key: ${JWT_KEY}
+      InternalApi__ApiKey: ${INTERNAL_API_KEY}
+      Aws__Sqs__Region: ${AWS_REGION}
+      Aws__Sqs__PurchaseCreatedQueueUrl: ${PURCHASE_CREATED_QUEUE_URL}
       DD_AGENT_HOST: datadog-agent
       DD_TRACE_AGENT_PORT: "8126"
       DD_TRACE_ENABLED: "true"
@@ -127,6 +133,7 @@ services:
       ConnectionStrings__ConnectionString: Server=sqlserver;Database=FCGPayments;User Id=sa;Password=${SQL_SA_PASSWORD};TrustServerCertificate=True
       Jwt__Issuer: ${JWT_ISSUER}
       Jwt__Key: ${JWT_KEY}
+      InternalApi__ApiKey: ${INTERNAL_API_KEY}
       DD_AGENT_HOST: datadog-agent
       DD_TRACE_AGENT_PORT: "8126"
       DD_TRACE_ENABLED: "true"

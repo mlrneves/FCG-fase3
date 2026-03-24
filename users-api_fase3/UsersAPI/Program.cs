@@ -111,6 +111,7 @@ builder.Services.AddScoped<IIntegrationEventPublisher, SqsIntegrationEventPublis
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICorrelationIdGenerator, CorrelationIdGenerator>();
+builder.Services.AddHealthChecks();
 
 var app = builder.Build();
 
@@ -159,5 +160,8 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHealthChecks("/health");
 
 app.Run();
+
+public partial class Program { }

@@ -1,6 +1,9 @@
+using Amazon;
+using Amazon.SQS;
 using CatalogAPI.Infra.Middleware;
 using Core.Repository;
 using Core.Services;
+using Infrastructure.Configuration;
 using Infrastructure.CrossCutting.Correlation;
 using Infrastructure.Repository;
 using Infrastructure.Services;
@@ -83,6 +86,19 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseLazyLoadingProxies();
 }, ServiceLifetime.Scoped);
 
+builder.Services.Configure<AwsSqsOptions>(
+    builder.Configuration.GetSection("Aws:Sqs"));
+
+builder.Services.AddSingleton<IAmazonSQS>(_ =>
+{
+    var regionName = builder.Configuration["Aws:Sqs:Region"];
+
+    if (string.IsNullOrWhiteSpace(regionName))
+        throw new InvalidOperationException("Aws:Sqs:Region não foi configurado.");
+
+    return new AmazonSQSClient(RegionEndpoint.GetBySystemName(regionName));
+});
+
 #region [DI]
 builder.Services.AddScoped<IGameRepository, GameRepository>();
 builder.Services.AddScoped<IPurchaseRepository, PurchaseRepository>();
@@ -91,7 +107,7 @@ builder.Services.AddScoped<IPromotionRepository, PromotionRepository>();
 builder.Services.AddScoped<IGameService, GameService>();
 builder.Services.AddScoped<IPurchaseService, PurchaseService>();
 builder.Services.AddScoped<IPromotionService, PromotionService>();
-builder.Services.AddScoped<IIntegrationEventPublisher, IntegrationEventPublisher>();
+builder.Services.AddScoped<IIntegrationEventPublisher, SqsIntegrationEventPublisher>();
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICorrelationIdGenerator, CorrelationIdGenerator>();

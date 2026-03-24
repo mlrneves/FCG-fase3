@@ -120,7 +120,7 @@ namespace Infrastructure.Services
             return created;
         }
 
-        public async Task ProcessPaymentResultAsync(int purchaseId, string status)
+        public async Task ProcessPaymentResultAsync(int purchaseId, string status, DateTime? processedAt = null)
         {
             var purchase = _purchaseRepository.ObterPorId(purchaseId);
 
@@ -128,7 +128,7 @@ namespace Infrastructure.Services
                 throw new Exception("Compra não encontrada.");
 
             purchase.Status = status;
-            purchase.ProcessedAt = DateTime.UtcNow;
+            purchase.ProcessedAt = processedAt ?? DateTime.UtcNow;
 
             base.Alterar(purchase);
 

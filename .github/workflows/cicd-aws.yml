@@ -13,6 +13,7 @@ env:
   ECR_USERS_REPOSITORY: fcg-users-api
   ECR_CATALOG_REPOSITORY: fcg-catalog-api
   ECR_PAYMENTS_REPOSITORY: fcg-payments-api
+  ECR_GATEWAY_REPOSITORY: fcg-gateway-api
 
 jobs:
   build-and-push:
@@ -21,7 +22,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      
+
       - name: Setup .NET 8
         uses: actions/setup-dotnet@v4
         with:
@@ -54,6 +55,12 @@ jobs:
       - name: Test payments-api solution
         run: dotnet test ./payments-api_fase3/FCGPaymentsAPI.sln --configuration Release --no-build --verbosity normal
 
+      - name: Restore gateway solution
+        run: dotnet restore ./GatewayAPI/GatewayAPI.csproj
+
+      - name: Build gateway solution
+        run: dotnet build ./GatewayAPI/GatewayAPI.csproj --configuration Release --no-restore
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -77,8 +84,10 @@ jobs:
           aws ecr describe-repositories --repository-names "$ECR_PAYMENTS_REPOSITORY" >/dev/null 2>&1 || \
           aws ecr create-repository --repository-name "$ECR_PAYMENTS_REPOSITORY"
 
+          aws ecr describe-repositories --repository-names "$ECR_GATEWAY_REPOSITORY" >/dev/null 2>&1 || \
+          aws ecr create-repository --repository-name "$ECR_GATEWAY_REPOSITORY"
+
       - name: Set image tags
-        id: meta
         shell: bash
         run: |
           REGISTRY="${{ steps.login-ecr.outputs.registry }}"
@@ -87,6 +96,7 @@ jobs:
           echo "USERS_IMAGE=${REGISTRY}/${ECR_USERS_REPOSITORY}:${TAG}" >> $GITHUB_ENV
           echo "CATALOG_IMAGE=${REGISTRY}/${ECR_CATALOG_REPOSITORY}:${TAG}" >> $GITHUB_ENV
           echo "PAYMENTS_IMAGE=${REGISTRY}/${ECR_PAYMENTS_REPOSITORY}:${TAG}" >> $GITHUB_ENV
+          echo "GATEWAY_IMAGE=${REGISTRY}/${ECR_GATEWAY_REPOSITORY}:${TAG}" >> $GITHUB_ENV
 
       - name: Build users-api image
         run: docker build -t ${{ env.USERS_IMAGE }} ./users-api_fase3
@@ -97,6 +107,9 @@ jobs:
       - name: Build payments-api image
         run: docker build -t ${{ env.PAYMENTS_IMAGE }} ./payments-api_fase3
 
+      - name: Build gateway-api image
+        run: docker build -t ${{ env.GATEWAY_IMAGE }} ./GatewayAPI
+
       - name: Push users-api image
         run: docker push ${{ env.USERS_IMAGE }}
 
@@ -105,6 +118,9 @@ jobs:
 
       - name: Push payments-api image
         run: docker push ${{ env.PAYMENTS_IMAGE }}
+
+      - name: Push gateway-api image
+        run: docker push ${{ env.GATEWAY_IMAGE }}
 
   deploy-ec2:
     runs-on: ubuntu-latest
@@ -137,9 +153,12 @@ jobs:
           NOTIFICATIONS_QUEUE_URL=${{ secrets.NOTIFICATIONS_QUEUE_URL }}
           PURCHASE_CREATED_QUEUE_URL=${{ secrets.PURCHASE_CREATED_QUEUE_URL }}
           AWS_REGION=${{ secrets.AWS_REGION }}
+          PAYMENTS_API_BASE_URL=http://payments-api:8080
+          CATALOG_API_BASE_URL=http://catalog-api:8080
           USERS_API_IMAGE=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/fcg-users-api:latest
           CATALOG_API_IMAGE=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/fcg-catalog-api:latest
           PAYMENTS_API_IMAGE=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/fcg-payments-api:latest
+          GATEWAY_API_IMAGE=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/fcg-gateway-api:latest
           EOF
 
       - name: Copy files to EC2

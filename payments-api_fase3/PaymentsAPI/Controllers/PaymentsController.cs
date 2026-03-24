@@ -7,7 +7,7 @@ namespace PaymentsAPI.Controllers;
 
 [Authorize]
 [ApiController]
-[Route("[controller]")]
+[Route("api/[controller]")]
 public class PaymentsController : ControllerBase
 {
     private readonly IPaymentService _paymentService;

@@ -86,7 +86,6 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 }, ServiceLifetime.Scoped);
 
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
-builder.Services.AddScoped<IIntegrationEventPublisher, IntegrationEventPublisher>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
 
 builder.Services.AddHttpContextAccessor();

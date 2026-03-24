@@ -10,17 +10,11 @@ namespace Infrastructure.Services
     public class PaymentService : IPaymentService
     {
         private readonly IPaymentRepository _paymentRepository;
-        private readonly IIntegrationEventPublisher _integrationEventPublisher;
-        private readonly ICorrelationIdGenerator _correlationIdGenerator;
 
         public PaymentService(
-            IPaymentRepository paymentRepository,
-            IIntegrationEventPublisher integrationEventPublisher,
-            ICorrelationIdGenerator correlationIdGenerator)
+            IPaymentRepository paymentRepository)
         {
             _paymentRepository = paymentRepository;
-            _integrationEventPublisher = integrationEventPublisher;
-            _correlationIdGenerator = correlationIdGenerator;
         }
 
         public IEnumerable<Payment> GetAll()
@@ -38,7 +32,7 @@ namespace Infrastructure.Services
             return _paymentRepository.GetAll().FirstOrDefault(x => x.PurchaseId == purchaseId);
         }
 
-        public async Task<Payment> ProcessPaymentAsync(PaymentInput input)
+        public Task<Payment> ProcessPaymentAsync(PaymentInput input)
         {
             ValidarInput(input);
 
@@ -47,45 +41,17 @@ namespace Infrastructure.Services
                 PurchaseId = input.PurchaseId,
                 UserId = input.UserId,
                 Amount = input.Amount,
+                GameId = input.GameId,
                 Status = "Processing"
             };
 
-            var createdPayment = _paymentRepository.Add(payment);
-
             var approved = SimularResultadoPagamento();
 
-            createdPayment.Status = approved ? "Approved" : "Rejected";
-            _paymentRepository.Update(createdPayment);
+            payment.Status = approved ? "Approved" : "Rejected";
 
-            var correlationId = _correlationIdGenerator.Get();
+            var createdPayment = _paymentRepository.Add(payment);
 
-            if (approved)
-            {
-                await _integrationEventPublisher.PublishAsync(new PaymentApprovedEvent
-                {
-                    PaymentId = createdPayment.Id,
-                    PurchaseId = createdPayment.PurchaseId,
-                    UserId = createdPayment.UserId,
-                    Amount = createdPayment.Amount,
-                    CorrelationId = correlationId
-                });
-
-                Console.WriteLine(
-                    $"EMAIL SIMULADO: pagamento aprovado para o usuário {createdPayment.UserId} na compra {createdPayment.PurchaseId}.");
-            }
-            else
-            {
-                await _integrationEventPublisher.PublishAsync(new PaymentRejectedEvent
-                {
-                    PaymentId = createdPayment.Id,
-                    PurchaseId = createdPayment.PurchaseId,
-                    UserId = createdPayment.UserId,
-                    Amount = createdPayment.Amount,
-                    CorrelationId = correlationId
-                });
-            }
-
-            return createdPayment;
+            return Task.FromResult(createdPayment);
         }
 
         private static void ValidarInput(PaymentInput input)
@@ -98,6 +64,9 @@ namespace Infrastructure.Services
 
             if (input.UserId <= 0)
                 throw new Exception("UserId inválido.");
+
+            if (input.GameId <= 0)
+                throw new Exception("GameId inválido.");
 
             if (input.Amount <= 0)
                 throw new Exception("Amount deve ser maior que zero.");

@@ -117,12 +117,26 @@ builder.Services.AddHealthChecks();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+app.UseCors("AllowGateway");
+
+app.UseSwagger(c =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+    c.PreSerializeFilters.Add((swagger, httpReq) =>
+    {
+        var host = httpReq.Headers["x-forwarded-host"].FirstOrDefault() ?? httpReq.Host.Value;
+        var proto = httpReq.Headers["x-forwarded-proto"].FirstOrDefault() ?? httpReq.Scheme;
+
+        swagger.Servers = new List<Microsoft.OpenApi.Models.OpenApiServer>
+        {
+            new()
+            {
+                Url = $"{proto}://{host}/users"
+            }
+        };
+    });
+});
+
+app.UseSwaggerUI();
 
 #region [Middler]
 app.UseCorrelationMiddleware();

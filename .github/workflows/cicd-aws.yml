@@ -62,16 +62,13 @@ jobs:
           echo "payments_image=${REGISTRY}/${ECR_PAYMENTS_REPOSITORY}:${TAG}" >> $GITHUB_OUTPUT
 
       - name: Build users-api image
-        run: |
-          docker build -t ${{ steps.meta.outputs.users_image }} ./users-api_fase3
+        run: docker build -t ${{ steps.meta.outputs.users_image }} ./users-api_fase3
 
       - name: Build catalog-api image
-        run: |
-          docker build -t ${{ steps.meta.outputs.catalog_image }} ./catalog-api_fase3
+        run: docker build -t ${{ steps.meta.outputs.catalog_image }} ./catalog-api_fase3
 
       - name: Build payments-api image
-        run: |
-          docker build -t ${{ steps.meta.outputs.payments_image }} ./payments-api_fase3
+        run: docker build -t ${{ steps.meta.outputs.payments_image }} ./payments-api_fase3
 
       - name: Push users-api image
         run: docker push ${{ steps.meta.outputs.users_image }}
@@ -94,7 +91,9 @@ jobs:
       - name: Create deployment package
         shell: bash
         run: |
-          mkdir deploy-package
+          rm -rf deploy-package
+          mkdir -p deploy-package
+
           cp observability/docker-compose.yml deploy-package/
           cp observability/docker-compose.aws.yml deploy-package/
 
@@ -118,7 +117,7 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          source: "deploy-package/*"
+          source: "deploy-package/"
           target: "/home/${{ secrets.EC2_USER }}/app"
 
       - name: Deploy on EC2
@@ -129,7 +128,8 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             set -e
-            cd /home/${{ secrets.EC2_USER }}/app
+            mkdir -p /home/${{ secrets.EC2_USER }}/app
+            cd /home/${{ secrets.EC2_USER }}/app/deploy-package
 
             aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | \
             docker login --username AWS --password-stdin \

@@ -83,7 +83,7 @@ services:
         condition: service_started
     networks:
       - fcg-network
-    
+
   catalog-api:
     build:
       context: ../catalog-api_fase3
@@ -119,7 +119,7 @@ services:
         condition: service_started
     networks:
       - fcg-network
-      
+
   payments-api:
     build:
       context: ../payments-api_fase3

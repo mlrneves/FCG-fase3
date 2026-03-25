@@ -20,9 +20,8 @@ public class Function
 
     public Function()
     {
-        var settings = EnvironmentSettings.Load();
-        var sink = new NotificationSink(settings);
-        _processor = new NotificationProcessor(settings, sink);
+        var sink = new NotificationSink();
+        _processor = new NotificationProcessor(sink);
     }
 
     public async Task<SQSBatchResponse> FunctionHandler(SQSEvent evnt, ILambdaContext context)

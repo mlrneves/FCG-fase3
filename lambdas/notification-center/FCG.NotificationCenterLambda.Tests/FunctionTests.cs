@@ -9,10 +9,6 @@ public class FunctionTests
     [Fact]
     public async Task Deve_processar_evento_UserRegistered_localmente()
     {
-        Environment.SetEnvironmentVariable("AWS_REGION", "us-east-1");
-        Environment.SetEnvironmentVariable("NOTIFICATIONS_QUEUE_URL", "https://sqs.us-east-1.amazonaws.com/123456789012/fcg-notifications");
-        Environment.SetEnvironmentVariable("LOG_NOTIFICATIONS_ONLY", "true");
-
         var function = new FCG.NotificationCenterLambda.Function();
 
         var notificationEvent = new
@@ -48,10 +44,6 @@ public class FunctionTests
     [Fact]
     public async Task Deve_processar_evento_PaymentProcessed_localmente()
     {
-        Environment.SetEnvironmentVariable("AWS_REGION", "us-east-1");
-        Environment.SetEnvironmentVariable("NOTIFICATIONS_QUEUE_URL", "https://sqs.us-east-1.amazonaws.com/123456789012/fcg-notifications");
-        Environment.SetEnvironmentVariable("LOG_NOTIFICATIONS_ONLY", "true");
-
         var function = new FCG.NotificationCenterLambda.Function();
 
         var notificationEvent = new

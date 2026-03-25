@@ -18,7 +18,7 @@ Parameters:
 
   AwsRegion:
     Type: String
-    Default: us-east-1
+    Default: us-east-2
     Description: Região AWS usada pela Lambda
 
   HttpTimeoutSeconds:
@@ -29,11 +29,20 @@ Parameters:
     Type: String
     Description: URL da fila fcg-notifications criada pela NotificationCenterLambda
 
+  NotificationsQueueArn:
+    Type: String
+    Description: ARN da fila fcg-notifications criada pela NotificationCenterLambda
+
+  PurchaseCreatedQueueName:
+    Type: String
+    Default: fcg-purchase-created
+    Description: Nome da fila de entrada de compras
+
 Resources:
   PurchaseCreatedQueue:
     Type: AWS::SQS::Queue
     Properties:
-      QueueName: fcg-purchase-created
+      QueueName: !Ref PurchaseCreatedQueueName
       VisibilityTimeout: 60
 
   PaymentProcessorFunction:
@@ -53,14 +62,13 @@ Resources:
           INTERNAL_API_KEY: !Ref InternalApiKey
           NOTIFICATIONS_QUEUE_URL: !Ref NotificationsQueueUrl
           HTTP_TIMEOUT_SECONDS: !Ref HttpTimeoutSeconds
-          LOG_LEVEL: Information
       Policies:
         - AWSLambdaBasicExecutionRole
         - Statement:
             - Effect: Allow
               Action:
                 - sqs:SendMessage
-              Resource: "*"
+              Resource: !Ref NotificationsQueueArn
       Events:
         PurchaseCreatedQueueEvent:
           Type: SQS

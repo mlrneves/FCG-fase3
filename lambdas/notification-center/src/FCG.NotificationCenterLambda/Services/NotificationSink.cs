@@ -1,21 +1,12 @@
-using FCG.NotificationCenterLambda.Models;
-
 namespace FCG.NotificationCenterLambda.Services;
 
-public sealed class NotificationSink(EnvironmentSettings settings)
+public sealed class NotificationSink
 {
-    public Task SendAsync(NotificationEnvelope envelope, string subject, string body, CancellationToken cancellationToken)
+    public Task SendAsync(string body, CancellationToken cancellationToken)
     {
         Console.WriteLine($"""
         ================== NOTIFICATION CENTER ==================
-        Environment: {settings.EnvironmentName}
-        Mode: {settings.NotificationMode}
-        From: {settings.SenderName} <{settings.SenderEmail}>
-        To: {envelope.Email ?? "not-informed@fcg.local"}
-        Subject: {subject}
-        CorrelationId: {envelope.CorrelationId}
-        EventType: {envelope.EventType}
-        Body:
+        Simulando notificação:
         {body}
         =========================================================
         """);

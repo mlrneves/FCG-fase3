@@ -146,26 +146,29 @@ Pasta: `observability`
 ```mermaid
 flowchart LR
     Client[Cliente / Swagger / Consumidor] --> Gateway[API Gateway - YARP]
+
     Gateway --> Users[Users API]
     Gateway --> Catalog[Catalog API]
     Gateway --> Payments[Payments API]
 
-    Catalog -->|envia evento| SQS1[SQS: fcg-purchase-created]
+    %% Fluxo de compra
+    Catalog -->|envia evento de compra criada| SQS1[SQS: fcg-purchase-created]
     SQS1 -->|trigger automático| LambdaPay[Lambda: payment-processor]
 
-    LambdaPay -->|HTTP interno + x-internal-api-key| Payments
-    LambdaPay -->|HTTP interno + x-internal-api-key| Catalog
-
+    LambdaPay -->|chamada interna| Payments
+    LambdaPay -->|chamada interna| Catalog
     LambdaPay -->|publica evento| SQS2[SQS: fcg-notifications]
+
+    %% Fluxo de usuário criado (corrigido)
+    Users -->|evento usuário criado| SQS2
+
+    %% Processamento de notificações
     SQS2 -->|trigger automático| LambdaNotif[Lambda: notification-center]
 
+    %% Persistência
     Users --> SQL[(SQL Server)]
     Catalog --> SQL
     Payments --> SQL
-
-    Users --> DD[Datadog Agent]
-    Catalog --> DD
-    Payments --> DD
 ```
 
 ---

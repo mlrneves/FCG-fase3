@@ -2,30 +2,25 @@ using FCG.NotificationCenterLambda.Models;
 
 namespace FCG.NotificationCenterLambda.Services;
 
-public sealed class NotificationProcessor(EnvironmentSettings settings, NotificationSink sink)
+public sealed class NotificationProcessor(NotificationSink sink)
 {
     public async Task ProcessAsync(NotificationEnvelope envelope, CancellationToken cancellationToken)
     {
-        var (subject, body) = BuildMessage(envelope);
-        await sink.SendAsync(envelope, subject, body, cancellationToken);
+        var body = BuildMessage(envelope);
+        await sink.SendAsync(body, cancellationToken);
     }
 
-    private static (string Subject, string Body) BuildMessage(NotificationEnvelope envelope)
+    private static string BuildMessage(NotificationEnvelope envelope)
     {
         return envelope.EventType switch
         {
             "UserRegistered" => (
-                "Bem-vindo à FCG Games",
                 $"Olá! Seu cadastro foi concluído com sucesso. UserId: {envelope.UserId}."
             ),
             "PaymentProcessed" => (
-                $"Pagamento {NormalizeStatus(envelope.Status)}",
-                $"Sua compra {envelope.PurchaseId} do jogo {envelope.GameId} teve o pagamento {NormalizeStatus(envelope.Status)}. Valor: {envelope.Amount?.ToString("0.00") ?? "0.00"}."
+                $"A compra {envelope.PurchaseId} do jogo {envelope.GameId} teve o pagamento {NormalizeStatus(envelope.Status)}. Valor: {envelope.Amount?.ToString("0.00") ?? "0.00"}."
             ),
-            _ => (
-                $"Evento {envelope.EventType}",
-                "Um novo evento foi recebido e registrado pelo centro de notificações."
-            )
+            _ => $"Um novo evento foi recebido e registrado pelo centro de notificações. Tipo: {envelope.EventType}."
         };
     }
 

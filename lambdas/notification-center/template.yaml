@@ -11,7 +11,7 @@ Resources:
   NotificationQueue:
     Type: AWS::SQS::Queue
     Properties:
-      QueueName: fcg-notifications
+      QueueName: !Ref NotificationQueueName
       VisibilityTimeout: 60
 
   NotificationCenterFunction:
@@ -25,10 +25,6 @@ Resources:
       Timeout: 30
       Policies:
         - AWSLambdaBasicExecutionRole
-      Environment:
-        Variables:
-          LOG_NOTIFICATIONS_ONLY: true
-          NOTIFICATIONS_QUEUE_URL: !Ref NotificationQueue
       Events:
         NotificationQueueEvent:
           Type: SQS

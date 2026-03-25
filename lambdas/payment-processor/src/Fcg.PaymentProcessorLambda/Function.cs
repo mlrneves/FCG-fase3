@@ -237,12 +237,7 @@ public class Function
             timeoutSeconds = parsed;
         }
 
-        var handler = new HttpClientHandler
-        {
-            ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
-        };
-
-        return new HttpClient(handler)
+        return new HttpClient
         {
             Timeout = TimeSpan.FromSeconds(timeoutSeconds)
         };

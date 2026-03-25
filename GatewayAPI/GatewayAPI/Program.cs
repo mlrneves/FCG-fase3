@@ -22,7 +22,14 @@ var app = builder.Build();
 app.UseCors("AllowAll");
 
 app.UseSwagger();
-app.UseSwaggerUI();
+
+app.UseSwaggerUI(options =>
+{
+    options.SwaggerEndpoint("/swagger/v1/swagger.json", "GatewayAPI v1");
+    options.SwaggerEndpoint("/users/swagger/v1/swagger.json", "UsersAPI v1");
+    options.SwaggerEndpoint("/games/swagger/v1/swagger.json", "CatalogAPI v1");
+    options.SwaggerEndpoint("/payments/swagger/v1/swagger.json", "PaymentsAPI v1");
+});
 
 app.MapGet("/health", () => Results.Ok(new
 {

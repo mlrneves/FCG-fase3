@@ -1,8 +1,10 @@
 using Amazon;
+using Amazon.DynamoDBv2;
 using Amazon.SQS;
 using CatalogAPI.Infra.Middleware;
 using Core.Repository;
 using Core.Services;
+using Elastic.Clients.Elasticsearch;
 using Infrastructure.Configuration;
 using Infrastructure.CrossCutting.Correlation;
 using Infrastructure.Repository;
@@ -32,7 +34,7 @@ builder.Services.AddSwaggerGen(c =>
     c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
     {
         In = Microsoft.OpenApi.Models.ParameterLocation.Header,
-        Description = "Por favor, insira 'Bearer' [espaço] e o token JWT",
+        Description = "Por favor, insira 'Bearer' [espaï¿½o] e o token JWT",
         Name = "Authorization",
         Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey
     });
@@ -80,6 +82,39 @@ builder.Services.AddAuthorization(options =>
 builder.Services.AddControllers();
 #endregion
 
+#region [Redis Cache]
+var redisConnection = builder.Configuration["Redis:ConnectionString"]
+    ?? builder.Configuration["REDIS_CONNECTION"]
+    ?? "redis:6379";
+
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = redisConnection;
+    options.InstanceName = "fcg:";
+});
+#endregion
+
+#region [Elasticsearch / OpenSearch]
+var elasticsearchUrl = builder.Configuration["Elasticsearch:Url"]
+    ?? builder.Configuration["ELASTICSEARCH_URL"]
+    ?? "http://localhost:9200";
+
+var elasticsearchClient = new ElasticsearchClient(new Uri(elasticsearchUrl));
+builder.Services.AddSingleton(elasticsearchClient);
+builder.Services.AddScoped<ISearchService, ElasticsearchSearchService>();
+#endregion
+
+#region [DynamoDB]
+builder.Services.AddSingleton<IAmazonDynamoDB>(_ =>
+{
+    var regionName = builder.Configuration["Aws:Sqs:Region"]
+        ?? builder.Configuration["AWS_REGION"]
+        ?? "us-east-2";
+    return new AmazonDynamoDBClient(RegionEndpoint.GetBySystemName(regionName));
+});
+builder.Services.AddScoped<IAuditLogRepository, DynamoDbAuditLogRepository>();
+#endregion
+
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
     options.UseSqlServer(builder.Configuration.GetConnectionString("ConnectionString"));
@@ -94,7 +129,7 @@ builder.Services.AddSingleton<IAmazonSQS>(_ =>
     var regionName = builder.Configuration["Aws:Sqs:Region"];
 
     if (string.IsNullOrWhiteSpace(regionName))
-        throw new InvalidOperationException("Aws:Sqs:Region não foi configurado.");
+        throw new InvalidOperationException("Aws:Sqs:Region nï¿½o foi configurado.");
 
     return new AmazonSQSClient(RegionEndpoint.GetBySystemName(regionName));
 });

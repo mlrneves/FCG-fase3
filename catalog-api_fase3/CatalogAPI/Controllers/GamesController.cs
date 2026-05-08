@@ -119,5 +119,15 @@ namespace FCGApi.Controllers
             var result = await _gameService.GetRecommendationsAsync(userId, top);
             return Ok(result);
         }
+
+        [HttpGet("search")]
+        public async Task<IActionResult> Search([FromQuery] string q, [FromServices] Core.Services.ISearchService searchService)
+        {
+            if (string.IsNullOrWhiteSpace(q))
+                return BadRequest("Parâmetro 'q' é obrigatório.");
+
+            var results = await searchService.SearchAsync(q);
+            return Ok(results);
+        }
     }
 }
